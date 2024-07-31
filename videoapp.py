@@ -9,6 +9,10 @@ from openai import OpenAI
 import time
 from PIL import Image, ImageDraw, ImageFont
 
+# Secrets from Streamlit Cloud
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+TYPECAST_API_KEY = st.secrets["TYPECAST_API_KEY"]
+
 # GitHub URL로부터 파일 다운로드
 def download_file(url, output_path):
     response = requests.get(url)
