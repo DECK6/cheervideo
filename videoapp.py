@@ -1,5 +1,5 @@
 import numpy as np
-from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip, AudioFileClip, concatenate_videoclips, CompositeAudioClip
+from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip, AudioFileClip, concatenate_videoclips, CompositeAudioClip, AudioClip
 import tempfile
 import streamlit as st
 import os
