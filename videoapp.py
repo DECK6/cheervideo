@@ -48,7 +48,7 @@ def add_text_with_image(video_path, text, output_path, font_path):
     text_img = create_text_image(text, font_path, font_size, color, video.w, video.h)
     
     # 텍스트 이미지 클립 생성 및 위치 설정
-    text_clip = ImageClip(text_img).set_duration(4.5).set_position(('center', 'center'))
+    text_clip = ImageClip(text_img).set_duration(5).set_position(('center', 'center'))
 
     video_with_text = CompositeVideoClip([video, text_clip])
     video_with_text.write_videofile(output_path, codec='libx264', audio_codec='aac')
