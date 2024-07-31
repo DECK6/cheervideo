@@ -100,7 +100,7 @@ def add_audio_to_video(video_path, audio_path, output_path):
     final_audio = CompositeAudioClip([
         original_audio_cut,
         new_audio_cut.set_start(start_time)
-    ]).set_duration(4.7)  # 전체 오디오 길이를 5초로 제한
+    ]).set_duration(5)  # 전체 오디오 길이를 5초로 제한
     
     # 5초 이후 무음 처리
     silent_audio = AudioClip(lambda t: 0, duration=video_duration-5)
