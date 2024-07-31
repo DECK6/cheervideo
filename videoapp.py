@@ -81,18 +81,33 @@ def create_text_image(text, font_path, font_size, color, img_width, img_height):
 def add_audio_to_video(video_path, audio_path, output_path):
     video = VideoFileClip(video_path)
     new_audio = AudioFileClip(audio_path)
-    
     original_audio = video.audio
-    delayed_audio = new_audio.set_start(1.333)
     
+    # 비디오 길이 측정
+    video_duration = video.duration
+    
+    # 새 오디오 시작 시간 및 길이 조정
+    start_time = 1.333
+    new_audio_duration = min(video_duration - start_time, new_audio.duration)
+    delayed_audio = new_audio.subclip(0, new_audio_duration).set_start(start_time)
+    
+    # 오디오 믹싱
     final_audio = CompositeAudioClip([original_audio, delayed_audio])
     
+    # 최종 오디오 길이를 비디오 길이로 정확하게 맞춤
+    final_audio = final_audio.set_duration(video_duration)
+    
+    # 최종 비디오 생성
     final_video = video.set_audio(final_audio)
     
+    # 결과 저장
     final_video.write_videofile(output_path, codec='libx264', audio_codec='aac')
 
+    # 리소스 해제
     video.close()
     new_audio.close()
+    original_audio.close()
+    final_audio.close()
     final_video.close()
     
 def process_video(text, audio_file, intro_video_path, font_path):
