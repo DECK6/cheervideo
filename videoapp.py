@@ -83,9 +83,19 @@ def add_audio_to_video(video_path, audio_path, output_path):
     new_audio = AudioFileClip(audio_path)
     
     original_audio = video.audio
-    delayed_audio = new_audio.set_start(1.333)
     
+    # 새 오디오의 시작 시간 (1.333초 지연)
+    start_time = 1.333
+    
+    # 원본 오디오 길이에 맞춰 새 오디오 트리밍
+    end_time = min(original_audio.duration, start_time + new_audio.duration)
+    delayed_audio = new_audio.subclip(0, end_time - start_time).set_start(start_time)
+    
+    # 원본 오디오와 새 오디오 믹싱
     final_audio = CompositeAudioClip([original_audio, delayed_audio])
+    
+    # 최종 오디오 길이를 비디오 길이로 제한
+    final_audio = final_audio.set_duration(video.duration)
     
     final_video = video.set_audio(final_audio)
     
