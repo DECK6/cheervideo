@@ -23,8 +23,8 @@ def get_video_path(github_url):
     return temp_file.name
 
 # GitHub에 업로드된 영상 파일의 URL
-INTRO_VIDEO_URL = "https://github.com/yourusername/yourrepo/raw/main/intro.mp4"
-OUTRO_VIDEO_URL = "https://github.com/yourusername/yourrepo/raw/main/outro.mp4"
+INTRO_VIDEO_URL = "https://github.com/DECK6/cheervideo/raw/main/intro.mp4"
+OUTRO_VIDEO_URL = "https://github.com/DECK6/cheervideo/raw/main/outro.mp4"
 
 # 영상 파일 경로 설정
 INTRO_VIDEO_PATH = get_video_path(INTRO_VIDEO_URL)
