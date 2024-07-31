@@ -86,27 +86,28 @@ def add_audio_to_video(video_path, audio_path, output_path):
     # 비디오 길이 측정
     video_duration = video.duration
     
-    # 새 오디오 시작 시간 및 길이
+    # 새 오디오 시작 시간
     start_time = 1.333
-    new_audio_duration = new_audio.duration
     
-    # 원본 오디오를 세 부분으로 나눔
-    original_audio_part1 = original_audio.subclip(0, start_time)
-    original_audio_part2 = original_audio.subclip(start_time, start_time + new_audio_duration)
-    original_audio_part3 = original_audio.subclip(start_time + new_audio_duration)
+    # 원본 오디오의 처음 5초만 사용
+    original_audio_cut = original_audio.subclip(0, 5)
+    
+    # 새 오디오 준비 (5초에서 시작 시간을 뺀 길이로 제한)
+    new_audio_duration = min(5 - start_time, new_audio.duration)
+    new_audio_cut = new_audio.subclip(0, new_audio_duration)
     
     # 오디오 조각들을 결합
     final_audio = CompositeAudioClip([
-        original_audio_part1,
-        new_audio.set_start(start_time),
-        original_audio_part3.set_start(start_time + new_audio_duration)
-    ])
+        original_audio_cut,
+        new_audio_cut.set_start(start_time)
+    ]).set_duration(5)  # 전체 오디오 길이를 5초로 제한
     
-    # 최종 오디오 길이를 비디오 길이로 맞춤
-    final_audio = final_audio.set_duration(video_duration)
+    # 5초 이후 무음 처리
+    silent_audio = AudioClip(lambda t: 0, duration=video_duration-5)
+    full_audio = CompositeAudioClip([final_audio, silent_audio.set_start(5)])
     
     # 최종 비디오 생성
-    final_video = video.set_audio(final_audio)
+    final_video = video.set_audio(full_audio)
     
     # 결과 저장
     final_video.write_videofile(output_path, codec='libx264', audio_codec='aac')
@@ -116,6 +117,7 @@ def add_audio_to_video(video_path, audio_path, output_path):
     new_audio.close()
     original_audio.close()
     final_audio.close()
+    full_audio.close()
     final_video.close()
     
 def process_video(text, audio_file, intro_video_path, font_path):
