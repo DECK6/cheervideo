@@ -79,15 +79,12 @@ def create_text_image(text, font_path, font_size, color, img_width, img_height):
     return np.array(img)
 
 def add_audio_to_video(video_path, audio_path, output_path):
-    video = VideoFileClip(video_path)
+    video = VideoFileClip(video_path).without_audio()  # 기존 오디오 제거
     new_audio = AudioFileClip(audio_path)
     
-    original_audio = video.audio
-    delayed_audio = new_audio.set_start(1.333)
+    delayed_audio = new_audio.set_start(1.333)  # 새로운 오디오 지연 시작
     
-    final_audio = CompositeAudioClip([original_audio, delayed_audio])
-    
-    final_video = video.set_audio(final_audio)
+    final_video = video.set_audio(delayed_audio)  # 새로운 오디오 설정
     
     final_video.write_videofile(output_path, codec='libx264', audio_codec='aac')
 
