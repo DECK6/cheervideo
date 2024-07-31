@@ -79,14 +79,13 @@ def create_text_image(text, font_path, font_size, color, img_width, img_height):
     return np.array(img)
 
 def add_audio_to_video(video_path, audio_path, output_path):
-    max_duration = 5  # 최대 길이 5초
-    video = VideoFileClip(video_path).subclip(0, max_duration)
-    new_audio = AudioFileClip(audio_path).subclip(0, 5 - 1.333)  # 새로운 오디오를 5 - 1.333초 길이로 자름
+    video = VideoFileClip(video_path)
+    new_audio = AudioFileClip(audio_path)
     
-    original_audio = video.audio.subclip(0, max_duration)
+    original_audio = video.audio
     delayed_audio = new_audio.set_start(1.333)
     
-    final_audio = CompositeAudioClip([original_audio, delayed_audio]).set_duration(max_duration)
+    final_audio = CompositeAudioClip([original_audio, delayed_audio])
     
     final_video = video.set_audio(final_audio)
     
