@@ -81,11 +81,11 @@ def create_text_image(text, font_path, font_size, color, img_width, img_height):
 def add_audio_to_video(video_path, audio_path, output_path):
     video = VideoFileClip(video_path)
     new_audio = AudioFileClip(audio_path).set_start(1.333)
-
-    # 새로운 오디오가 끝난 지점에서 기존 오디오의 나머지 부분을 추가하지 않도록 함
-    original_audio = video.audio.set_duration(new_audio.end)
     
-    final_audio = CompositeAudioClip([original_audio, new_audio])
+    original_audio = video.audio
+    combined_duration = max(video.duration, new_audio.end)
+    
+    final_audio = CompositeAudioClip([original_audio, new_audio.set_duration(combined_duration)])
     
     final_video = video.set_audio(final_audio)
     
