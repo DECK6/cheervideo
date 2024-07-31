@@ -147,7 +147,20 @@ def combine_videos(intro_video, outro_video):
     intro_clip = VideoFileClip(intro_video)
     outro_clip = VideoFileClip(outro_video)
     
-    final_clip = concatenate_videoclips([intro_clip, outro_clip])
+    # 인트로 비디오의 오디오를 4.666초로 제한
+    intro_audio = intro_clip.audio.subclip(0, 5)
+    intro_clip = intro_clip.set_audio(intro_audio)
+    
+    # 아웃트로 비디오의 오디오는 유지
+    
+    # 인트로 클립의 나머지 부분(4.666초 이후)을 무음으로 설정
+    silent_intro_end = intro_clip.set_audio(None).subclip(5)
+    
+    # 인트로 클립의 처음 4.666초와 무음 부분을 합치기
+    full_intro_clip = concatenate_videoclips([intro_clip.subclip(0, 5), silent_intro_end])
+    
+    # 인트로와 아웃트로 비디오 연결
+    final_clip = concatenate_videoclips([full_intro_clip, outro_clip])
 
     with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_final_video:
         temp_final_video_path = temp_final_video.name
