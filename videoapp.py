@@ -198,9 +198,9 @@ def process_with_llm_for_display(group_name, name):
 def process_with_llm_for_audio(group_name, name, cheer_content):
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
     completion = client.chat.completions.create(
-        model="gpt-4o-mini-2024-07-18",
+        model="gpt-4o",
         messages=[
-            {"role": "system", "content": "입력된 단체명(최대 10자), 이름(최대 5자), 응원내용(최대 10자)을 받아 {이름}이/가 {단체명}을 {응원내용}으로 응원한다는 형식으로 응원한다는 메세지를 반환하세요. 이름이 받침으로 끝나면 '이', 그렇지 않으면 '가'를 사용합니다. 응원 내용은 최소 10자 최대 15자로 어떠한 내용을 입력 받더라도 메세지의 관련성은 유지하고 자연스러운 응원메세지를 만들며 욕설과 비속어 없는 밝고 긍정적인 응원 내용으로 아이같은 말투로 변환하여 출력합니다. 게임대회 응원 메세지라는 점을 고려합니다."},
+            {"role": "system", "content": "입력된 단체명(최대 10자), 이름(최대 5자), 응원내용(최대 10자)을 받아 {이름}이/가 {단체명}을 {응원내용}으로 응원한다는 형식으로 응원한다는 메세지를 반환하세요. 이름이 받침으로 끝나면 '이', 그렇지 않으면 '가'를 사용합니다. 응원 내용은 최소 10자 최대 15자로 어떠한 내용을 입력 받더라도 메세지의 관련성은 유지하고 자연스러운 응원메세지를 만들며 욕설과 비속어 없는 밝고 긍정적인 응원 내용으로 끝이 아이같은 말투로 변환하여 출력합니다. '~~한다'같은 말투는 사용하지 않고 '~~해'를 사용합니다 게임대회 응원 메세지라는 점을 고려합니다."},
             {"role": "user", "content": f"단체명: {group_name}, 이름: {name}, 응원내용: {cheer_content}"}
         ]
     )
@@ -310,30 +310,28 @@ with col1:
     font_path = "Giants-Inline.otf"
     download_font(FONT_URL, font_path)
 
-    if st.button("메시지 생성"):
-        if group_name and name and cheer_content and email:
-            with st.spinner("동영상 생성 중..."):
-                display_text = process_with_llm_for_display(group_name, name)
-                audio_text = process_with_llm_for_audio(group_name, name, cheer_content)
-            
-                st.write(f"화면에 표시될 메시지: {display_text}")
-                st.write(f"음성으로 생성될 메시지: {audio_text}")
+if st.button("메시지 생성"):
+    if group_name and name and cheer_content and email:
+        with st.spinner("동영상 생성 중..."):
+            display_text = process_with_llm_for_display(group_name, name)
+            audio_text = process_with_llm_for_audio(group_name, name, cheer_content)
+        
+            st.write(f"화면에 표시될 메시지: {display_text}")
+            st.write(f"음성으로 생성될 메시지: {audio_text}")
 
-                audio_file = generate_audio(audio_text)
+            audio_file = generate_audio(audio_text)
 
-                intro_video = process_video(display_text, audio_file, INTRO_VIDEO_PATH, font_path)
+            # 전체 비디오 처리 (인트로 + 아웃트로 + 텍스트 + 오디오)
+            final_video = process_full_video(INTRO_VIDEO_PATH, OUTRO_VIDEO_PATH, display_text, font_path, audio_file)
 
-                final_video = combine_videos(intro_video, OUTRO_VIDEO_PATH, display_text, font_path)
+            send_email(email, final_video)
 
-                send_email(email, final_video)
+            with col2:
+                st.video(final_video)
 
-                with col2:
-                    st.video(final_video)
+            os.unlink(audio_file)
+            os.unlink(final_video)
+    else:
+        st.error("모든 필드를 입력해주세요.")
 
-                os.unlink(audio_file)
-                os.unlink(intro_video)
-                os.unlink(final_video)
-        else:
-            st.error("모든 필드를 입력해주세요.")
 
-        st.info("이 앱은 입력받은 단체명과 이름으로 응원 메시지를 생성하고, 이를 미리 준비된 인트로 영상에 삽입한 후 아웃트로 영상과 합쳐 최종 영상을 생성합니다.")
