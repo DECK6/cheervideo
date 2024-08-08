@@ -128,8 +128,14 @@ def process_full_video(intro_video_path, outro_video_path, display_text, font_pa
     # 오디오 클립 로드
     audio_clip = AudioFileClip(audio_file).set_start(1.0)
     
-    # 인트로 클립에 오디오 추가
-    intro_with_audio = intro_clip.set_audio(audio_clip)
+    # 무음 오디오 클립 생성
+    silence = AudioClip(lambda t: 0, duration=1.0, fps=44100)
+    
+    # 무음과 오디오 클립 결합
+    combined_audio = CompositeAudioClip([silence, audio_clip])
+    
+    # 인트로 클립에 결합된 오디오 추가
+    intro_with_audio = intro_clip.set_audio(combined_audio)
     
     # 인트로와 아웃트로 클립 연결
     final_clip = concatenate_videoclips([intro_with_audio, outro_clip])
