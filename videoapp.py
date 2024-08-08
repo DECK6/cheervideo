@@ -120,6 +120,8 @@ def create_text_image(text, font_path, font_size, color, img_width, img_height):
 #    new_audio.close()
 #    final_video.close()
 
+from moviepy.audio.AudioClip import CompositeAudioClip
+
 def process_full_video(intro_video_path, outro_video_path, display_text, font_path, audio_file):
     # 비디오 클립 로드
     intro_clip = VideoFileClip(intro_video_path)
@@ -128,11 +130,24 @@ def process_full_video(intro_video_path, outro_video_path, display_text, font_pa
     # 오디오 클립 로드
     audio_clip = AudioFileClip(audio_file).set_start(1.0)
     
+    # 인트로 길이 계산
+    intro_duration = intro_clip.duration
+    
+    # 오디오 길이 계산
+    audio_duration = audio_clip.duration
+    
+    # 앞부분 1초 무음, 뒷부분 무음 길이 계산
+    remaining_silence_duration = intro_duration - (1.0 + audio_duration)
+    
+    if remaining_silence_duration < 0:
+        raise ValueError("The audio duration exceeds the intro video duration minus 1 second for the delay.")
+    
     # 무음 오디오 클립 생성
-    silence = AudioClip(lambda t: 0, duration=1.0, fps=44100)
+    silence_start = AudioClip(lambda t: 0, duration=1.0, fps=44100)
+    silence_end = AudioClip(lambda t: 0, duration=remaining_silence_duration, fps=44100)
     
     # 무음과 오디오 클립 결합
-    combined_audio = CompositeAudioClip([silence, audio_clip])
+    combined_audio = CompositeAudioClip([silence_start, audio_clip, silence_end])
     
     # 인트로 클립에 결합된 오디오 추가
     intro_with_audio = intro_clip.set_audio(combined_audio)
@@ -162,6 +177,7 @@ def process_full_video(intro_video_path, outro_video_path, display_text, font_pa
     video_with_text.close()
     
     return temp_final_video_path
+
 
 #def combine_videos(intro_video, outro_video, text, font_path):
 #    intro_clip = VideoFileClip(intro_video)
@@ -278,13 +294,24 @@ def generate_audio(text):
         st.error(f"Failed to download audio file: Status code {audio_response.status_code}")
         raise Exception("Failed to download audio file")
 
-def send_email(receiver_email, video_path):
+def send_email(receiver_email, video_path, group_name, name, cheer_content, display_text, audio_text):
     msg = MIMEMultipart()
     msg['From'] = EMAIL_SETTINGS["SENDER_EMAIL"]
     msg['To'] = receiver_email
-    msg['Subject'] = "Your Cheer Video"
+    msg['Subject'] = "2024 Youth E-Sports Festival 응원영상"
 
-    body = "Here's your cheer video!"
+    body = f"""제작한 응원 영상이 도착했습니다.
+
+단체명: {group_name}
+이름: {name}
+응원내용: {cheer_content}
+
+화면 메시지:
+{display_text}
+
+음성 메시지:
+{audio_text}
+"""
     msg.attach(MIMEText(body, 'plain'))
 
     with open(video_path, "rb") as file:
@@ -298,9 +325,10 @@ def send_email(receiver_email, video_path):
         server.login(EMAIL_SETTINGS["SENDER_EMAIL"], EMAIL_SETTINGS["SENDER_PASSWORD"])
         server.send_message(msg)
         server.quit()
-        st.success("Email sent successfully!")
+        st.success("이메일이 전송되었습니다.")
     except Exception as e:
         st.error(f"Failed to send email: {str(e)}")
+
 
 # Streamlit app
 st.set_page_config(page_title="응원 메시지 생성기", page_icon="🎥", layout="wide")
@@ -336,7 +364,7 @@ if st.button("메시지 생성"):
             # 전체 비디오 처리 (인트로 + 아웃트로 + 텍스트 + 오디오)
             final_video = process_full_video(INTRO_VIDEO_PATH, OUTRO_VIDEO_PATH, display_text, font_path, audio_file)
 
-            send_email(email, final_video)
+            send_email(email, final_video, group_name, name, cheer_content, display_text, audio_text)
 
             with col2:
                 st.video(final_video)
