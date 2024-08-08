@@ -76,11 +76,22 @@ def add_audio_to_video(video_path, audio_path, output_path):
     video = VideoFileClip(video_path)
     new_audio = AudioFileClip(audio_path)
     
+    # 비디오 길이 확인
+    video_duration = video.duration
+    
+    # 오디오 길이 확인 및 조정
+    audio_duration = new_audio.duration
+    if audio_duration < video_duration - 1:
+        # 오디오가 너무 짧으면 무음으로 채움
+        from moviepy.audio.AudioClip import CompositeAudioClip
+        silence = AudioClip(lambda t: 0, duration=video_duration-1-audio_duration)
+        new_audio = CompositeAudioClip([new_audio, silence.set_start(audio_duration)])
+    else:
+        # 오디오가 너무 길면 자름
+        new_audio = new_audio.subclip(0, video_duration - 1)
+    
     # 인트로 영상의 1초부터 오디오 시작
     new_audio = new_audio.set_start(1.0)
-    
-    # 비디오 길이에 맞춰 오디오 조정
-    new_audio = new_audio.set_duration(video.duration - 1.0)
     
     # 새 오디오를 비디오에 설정 (기존 오디오 대체)
     final_video = video.set_audio(new_audio)
@@ -96,11 +107,25 @@ def process_video(text, audio_file, intro_video_path, font_path):
             temp_video_with_text_path = temp_video_with_text.name
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_final_video:
             temp_final_video_path = temp_final_video.name
+        
         add_text_to_video(intro_video_path, text, temp_video_with_text_path, font_path)
         add_audio_to_video(temp_video_with_text_path, audio_file, temp_final_video_path)
+        
         return temp_final_video_path
     except Exception as e:
         st.error(f"Error in process_video: {str(e)}")
+        st.error(f"intro_video_path: {intro_video_path}")
+        st.error(f"audio_file: {audio_file}")
+        st.error(f"temp_video_with_text_path: {temp_video_with_text_path}")
+        
+        # 추가 디버깅 정보
+        video = VideoFileClip(intro_video_path)
+        audio = AudioFileClip(audio_file)
+        st.error(f"Video duration: {video.duration}")
+        st.error(f"Audio duration: {audio.duration}")
+        video.close()
+        audio.close()
+        
         raise
     finally:
         if 'temp_video_with_text_path' in locals() and os.path.exists(temp_video_with_text_path):
