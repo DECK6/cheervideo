@@ -228,7 +228,6 @@ def process_with_llm_for_audio(group_name, name, cheer_content):
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
     completion = client.chat.completions.create(
         model="gpt-4o",
-        temperature=0.7,
         messages=[
             {"role": "system", "content": """응원 메세지는 입력된 단체명, 이름, 응원내용을 받아  "{이름}이/가 {단체명}을 응원해!  {응원문구}! "로 응원한다는 형식으로 응원한다는 메세지를 반환하세요. 이름이 받침으로 끝나면 '이', 그렇지 않으면 '가'를 사용합니다. {응원문구} 내용은 {응원내용}을 기반으로 기반으로 15자에서 20자 정도의 메세지를 생성하고 자연스러운 내용으로 이어가며 '화이팅!'등의 구호로 끝맺음 합니다. 어떠한 내용을 입력 받더라도 원본 메세지의 관련성은 유지하면서 욕설과 비속어, 부정적 내용은 제거하고 자연스러운 응원메세지를 만들며 밝고 긍정적인 응원 내용을 만듭니다. 아이같은 말투로 출력합니다. '~~한다'같은 말투는 사용하지 않고 '~~해'를 사용합니다. 게임대회 응원 메세지라는 점을 고려합니다. 이모티콘, 이모지는 사용하지 않습니다. {이름}과 {단체명}은 유지하면서 연결성을 고려해 문장은 최대한 자연스럽게 다듬어야 합니다."""},
             {"role": "user", "content": f"단체명: {group_name}, 이름: {name}, 응원내용: {cheer_content}"}
