@@ -45,7 +45,9 @@ OUTRO_VIDEO_PATH = get_video_path(OUTRO_VIDEO_URL)
 def download_font(url, font_path):
     download_file(url, font_path)
 
-def create_text_image(text, font_path, font_size, img_width, img_height, color):
+def create_text_image(text, font_path, font_size, color, img_width, img_height):
+    if img_width <= 0 or img_height <= 0:
+        raise ValueError(f"Invalid image dimensions: width={img_width}, height={img_height}")
     img = Image.new('RGBA', (img_width, img_height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(font_path, font_size)
@@ -66,7 +68,9 @@ def create_text_image(text, font_path, font_size, img_width, img_height, color):
 def add_text_to_video(video_path, text, output_path, font_path):
     video = VideoFileClip(video_path)
     font_size = 70
-    color = '#503F95'  # White color
+    color = '#503F95'  # Purple color
+    if video.w <= 0 or video.h <= 0:
+        raise ValueError(f"Invalid video dimensions: width={video.w}, height={video.h}")
     text_img = create_text_image(text, font_path, font_size, color, video.w, video.h)
     text_clip = ImageClip(text_img).set_duration(video.duration)
     video_with_text = CompositeVideoClip([video, text_clip])
@@ -122,6 +126,7 @@ def process_video(text, audio_file, intro_video_path, font_path):
         video = VideoFileClip(intro_video_path)
         audio = AudioFileClip(audio_file)
         st.error(f"Video duration: {video.duration}")
+        st.error(f"Video dimensions: {video.w}x{video.h}")
         st.error(f"Audio duration: {audio.duration}")
         video.close()
         audio.close()
