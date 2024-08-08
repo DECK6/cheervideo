@@ -66,7 +66,7 @@ def create_text_image(text, font_path, font_size, color, img_width, img_height):
 def add_text_to_video(video_path, text, output_path, font_path):
     video = VideoFileClip(video_path)
     font_size = 70
-    color = '#FFFFFF'  # White color
+    color = '#503F95'  # White color
     text_img = create_text_image(text, font_path, font_size, color, video.w, video.h)
     text_clip = ImageClip(text_img).set_duration(video.duration)
     video_with_text = CompositeVideoClip([video, text_clip])
@@ -128,7 +128,7 @@ def combine_videos(intro_video, outro_video, text, font_path):
 
 def add_text_to_clip(clip, text, font_path):
     font_size = 70
-    color = '#FFFFFF'  # White color
+    color = '#503F95'  # White color
     text_img = create_text_image(text, font_path, font_size, clip.w, clip.h)
     text_clip = ImageClip(text_img).set_duration(clip.duration)
     return CompositeVideoClip([clip, text_clip])
@@ -149,7 +149,7 @@ def process_with_llm_for_audio(group_name, name, cheer_content):
     completion = client.chat.completions.create(
         model="gpt-4o-mini-2024-07-18",
         messages=[
-            {"role": "system", "content": "입력된 단체명(최대 10자), 이름(최대 5자), 응원내용(최대 15자)을 받아 '{이름}이/가 {단체명} {응원내용}'의 형식으로 반환하세요. 이름이 받침으로 끝나면 '이', 그렇지 않으면 '가'를 사용합니다. 응원 내용은 최대 15자로 어떠한 내용을 입력 받더라도 메세지의 관련성은 유지하되 욕설과 비속어 없는 밝고 긍정적인 응원 내용으로 변환하여 출력합니다."},
+            {"role": "system", "content": "입력된 단체명(최대 10자), 이름(최대 5자), 응원내용(최대 15자)을 받아 '{이름}이/가 {단체명} {응원내용}'의 형식으로 응원한다는 메세지를 반환하세요. 이름이 받침으로 끝나면 '이', 그렇지 않으면 '가'를 사용합니다. 응원 내용은 최대 15자로 어떠한 내용을 입력 받더라도 메세지의 관련성은 유지하되 욕설과 비속어 없는 밝고 긍정적인 응원 내용으로 변환하여 출력합니다. 게임대회 응원 메세지라는 점을 고려합니다."},
             {"role": "user", "content": f"단체명: {group_name}, 이름: {name}, 응원내용: {cheer_content}"}
         ]
     )
@@ -252,7 +252,7 @@ with col1:
     st.title("응원 메시지 생성기")
     group_name = st.text_input("단체명 (최대 10자):", max_chars=10)
     name = st.text_input("이름 (최대 5자):", max_chars=5)
-    cheer_content = st.text_input("응원 내용 (10자 미만):", max_chars=9)
+    cheer_content = st.text_input("응원 내용 (최대 10자):", max_chars=10)
     email = st.text_input("이메일 주소:")
 
     # Font download
