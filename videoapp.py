@@ -59,16 +59,24 @@ def create_text_image(text, font_path, font_size, color, img_width, img_height):
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(font_path, font_size)
     
-    lines = text.split('\n')
-    total_height = sum([draw.textbbox((0, 0), line, font=font)[3] - draw.textbbox((0, 0), line, font=font)[1] for line in lines])
-    y = img_height - total_height - 50  # 50 pixels from bottom
+    # Split text at the first exclamation mark
+    parts = text.split('!', 1)
+    line1 = parts[0] + '!'
+    line2 = parts[1] + '!' if len(parts) > 1 else ""
     
-    for line in lines:
-        bbox = draw.textbbox((0, 0), line, font=font)
-        w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
-        x = (img_width - w) // 2
-        draw.text((x, y), line, font=font, fill=color)
-        y += h + 10  # 10 pixels between lines
+    # Calculate text dimensions
+    w1, h1 = draw.textbbox((0, 0), line1, font=font)[2:]
+    w2, h2 = draw.textbbox((0, 0), line2, font=font)[2:]
+    
+    # Calculate positions
+    y1 = int(img_height * 0.8)  # 80% of the screen height
+    y2 = y1 + h1 + 10  # 10 pixels between lines
+    x1 = (img_width - w1) // 2 + 100  # 100 pixels to the right
+    x2 = (img_width - w2) // 2 + 100
+    
+    # Draw text
+    draw.text((x1, y1), line1, font=font, fill=color)
+    draw.text((x2, y2), line2, font=font, fill=color)
     
     return np.array(img)
 
@@ -164,8 +172,8 @@ def combine_videos(intro_video, outro_video, text, font_path):
     return temp_final_video_path
 
 def add_text_to_clip(clip, text, font_path):
-    font_size = 70
-    color = '#503F95'  # Purple color
+    font_size = 100  # 100픽셀 폰트 크기
+    color = '#503F95'  # 보라색
     try:
         img_width = int(clip.w)
         img_height = int(clip.h)
