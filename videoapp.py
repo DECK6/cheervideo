@@ -80,109 +80,115 @@ def create_text_image(text, font_path, font_size, color, img_width, img_height):
     
     return np.array(img)
 
-def add_text_to_video(video_path, text, output_path, font_path):
-    video = VideoFileClip(video_path)
-    font_size = 70
+#def add_text_to_video(video_path, text, output_path, font_path):
+#    video = VideoFileClip(video_path)
+#    font_size = 70
+#    color = '#503F95'  # Purple color
+#    if video.w <= 0 or video.h <= 0:
+#        raise ValueError(f"Invalid video dimensions: width={video.w}, height={video.h}")
+#    text_img = create_text_image(text, font_path, font_size, color, video.w, video.h)
+#    text_clip = ImageClip(text_img).set_duration(video.duration)
+#    video_with_text = CompositeVideoClip([video, text_clip])
+#    video_with_text.write_videofile(output_path, codec='libx264', audio_codec='aac')
+
+#def add_audio_to_video(video_path, audio_path, output_path):
+#    video = VideoFileClip(video_path)
+#    new_audio = AudioFileClip(audio_path)
+#    
+#    # 비디오 길이 확인
+#    video_duration = video.duration
+#    
+#    # 오디오 길이 확인 및 조정
+#    audio_duration = new_audio.duration
+#    if audio_duration < video_duration - 1:
+#        # 오디오가 너무 짧으면 무음으로 채움
+#        from moviepy.audio.AudioClip import CompositeAudioClip
+#        silence = AudioClip(lambda t: 0, duration=video_duration-1-audio_duration)
+#        new_audio = CompositeAudioClip([new_audio, silence.set_start(audio_duration)])
+#   else:
+#       # 오디오가 너무 길면 자름
+#       new_audio = new_audio.subclip(0, video_duration - 1)
+#    
+#    # 인트로 영상의 1초부터 오디오 시작
+#    new_audio = new_audio.set_start(1.0)
+#    
+#    # 새 오디오를 비디오에 설정 (기존 오디오 대체)
+#    final_video = video.set_audio(new_audio)
+#    
+#    final_video.write_videofile(output_path, codec='libx264', audio_codec='aac')
+#    video.close()
+#    new_audio.close()
+#    final_video.close()
+
+def process_full_video(intro_video_path, outro_video_path, display_text, font_path, audio_file):
+    # 비디오 클립 로드
+    intro_clip = VideoFileClip(intro_video_path)
+    outro_clip = VideoFileClip(outro_video_path)
+    
+    # 오디오 클립 로드
+    audio_clip = AudioFileClip(audio_file)
+    
+    # 인트로 클립에 오디오 추가
+    intro_with_audio = intro_clip.set_audio(audio_clip)
+    
+    # 인트로와 아웃트로 클립 연결
+    final_clip = concatenate_videoclips([intro_with_audio, outro_clip])
+    
+    # 전체 비디오에 텍스트 추가
+    font_size = 100
     color = '#503F95'  # Purple color
-    if video.w <= 0 or video.h <= 0:
-        raise ValueError(f"Invalid video dimensions: width={video.w}, height={video.h}")
-    text_img = create_text_image(text, font_path, font_size, color, video.w, video.h)
-    text_clip = ImageClip(text_img).set_duration(video.duration)
-    video_with_text = CompositeVideoClip([video, text_clip])
-    video_with_text.write_videofile(output_path, codec='libx264', audio_codec='aac')
-
-def add_audio_to_video(video_path, audio_path, output_path):
-    video = VideoFileClip(video_path)
-    new_audio = AudioFileClip(audio_path)
+    text_img = create_text_image(display_text, font_path, font_size, color, final_clip.w, final_clip.h)
+    text_clip = ImageClip(text_img).set_duration(final_clip.duration)
     
-    # 비디오 길이 확인
-    video_duration = video.duration
+    video_with_text = CompositeVideoClip([final_clip, text_clip])
     
-    # 오디오 길이 확인 및 조정
-    audio_duration = new_audio.duration
-    if audio_duration < video_duration - 1:
-        # 오디오가 너무 짧으면 무음으로 채움
-        from moviepy.audio.AudioClip import CompositeAudioClip
-        silence = AudioClip(lambda t: 0, duration=video_duration-1-audio_duration)
-        new_audio = CompositeAudioClip([new_audio, silence.set_start(audio_duration)])
-    else:
-        # 오디오가 너무 길면 자름
-        new_audio = new_audio.subclip(0, video_duration - 1)
-    
-    # 인트로 영상의 1초부터 오디오 시작
-    new_audio = new_audio.set_start(1.0)
-    
-    # 새 오디오를 비디오에 설정 (기존 오디오 대체)
-    final_video = video.set_audio(new_audio)
-    
-    final_video.write_videofile(output_path, codec='libx264', audio_codec='aac')
-    video.close()
-    new_audio.close()
-    final_video.close()
-
-def process_video(text, audio_file, intro_video_path, font_path):
-    try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_video_with_text:
-            temp_video_with_text_path = temp_video_with_text.name
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_final_video:
-            temp_final_video_path = temp_final_video.name
-        
-        add_text_to_video(intro_video_path, text, temp_video_with_text_path, font_path)
-        add_audio_to_video(temp_video_with_text_path, audio_file, temp_final_video_path)
-        
-        return temp_final_video_path
-    except Exception as e:
-        st.error(f"Error in process_video: {str(e)}")
-        st.error(f"intro_video_path: {intro_video_path}")
-        st.error(f"audio_file: {audio_file}")
-        st.error(f"temp_video_with_text_path: {temp_video_with_text_path}")
-        
-        # 추가 디버깅 정보
-        video = VideoFileClip(intro_video_path)
-        audio = AudioFileClip(audio_file)
-        st.error(f"Video duration: {video.duration}")
-        st.error(f"Video dimensions: {video.w}x{video.h}")
-        st.error(f"Audio duration: {audio.duration}")
-        video.close()
-        audio.close()
-        
-        raise
-    finally:
-        if 'temp_video_with_text_path' in locals() and os.path.exists(temp_video_with_text_path):
-            os.unlink(temp_video_with_text_path)
-
-def combine_videos(intro_video, outro_video, text, font_path):
-    intro_clip = VideoFileClip(intro_video)
-    outro_clip = VideoFileClip(outro_video)
-    
-    intro_with_text = add_text_to_clip(intro_clip, text, font_path)
-    outro_with_text = add_text_to_clip(outro_clip, text, font_path)
-    
-    final_clip = concatenate_videoclips([intro_with_text, outro_with_text])
-    
+    # 임시 파일 생성 및 비디오 저장
     with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_final_video:
         temp_final_video_path = temp_final_video.name
     
-    final_clip.write_videofile(temp_final_video_path, codec='libx264', audio_codec='aac')
+    video_with_text.write_videofile(temp_final_video_path, codec='libx264', audio_codec='aac')
     
+    # 클립 닫기
     intro_clip.close()
     outro_clip.close()
+    audio_clip.close()
     final_clip.close()
+    video_with_text.close()
     
     return temp_final_video_path
 
-def add_text_to_clip(clip, text, font_path):
-    font_size = 100  # 100픽셀 폰트 크기
-    color = '#503F95'  # 보라색
-    try:
-        img_width = int(clip.w)
-        img_height = int(clip.h)
-    except (ValueError, AttributeError):
-        raise ValueError(f"Invalid clip dimensions: width={clip.w}, height={clip.h}. Must be integers.")
-    
-    text_img = create_text_image(text, font_path, font_size, color, img_width, img_height)
-    text_clip = ImageClip(text_img).set_duration(clip.duration)
-    return CompositeVideoClip([clip, text_clip])
+#def combine_videos(intro_video, outro_video, text, font_path):
+#    intro_clip = VideoFileClip(intro_video)
+#    outro_clip = VideoFileClip(outro_video)
+#    
+#    intro_with_text = add_text_to_clip(intro_clip, text, font_path)
+#    outro_with_text = add_text_to_clip(outro_clip, text, font_path)
+#    
+#    final_clip = concatenate_videoclips([intro_with_text, outro_with_text])
+#    
+#    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_final_video:
+#        temp_final_video_path = temp_final_video.name
+#    
+#    final_clip.write_videofile(temp_final_video_path, codec='libx264', audio_codec='aac')
+#    
+#    intro_clip.close()
+#    outro_clip.close()
+#    final_clip.close()
+#    
+#    return temp_final_video_path
+
+#def add_text_to_clip(clip, text, font_path):
+#    font_size = 100  # 100픽셀 폰트 크기
+#    color = '#503F95'  # 보라색
+#    try:
+#        img_width = int(clip.w)
+#        img_height = int(clip.h)
+#    except (ValueError, AttributeError):
+#        raise ValueError(f"Invalid clip dimensions: width={clip.w}, height={clip.h}. Must be integers.")
+   
+#    text_img = create_text_image(text, font_path, font_size, color, img_width, img_height)
+#    text_clip = ImageClip(text_img).set_duration(clip.duration)
+#    return CompositeVideoClip([clip, text_clip])
 
 def process_with_llm_for_display(group_name, name):
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
