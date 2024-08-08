@@ -45,7 +45,7 @@ OUTRO_VIDEO_PATH = get_video_path(OUTRO_VIDEO_URL)
 def download_font(url, font_path):
     download_file(url, font_path)
 
-def create_text_image(text, font_path, font_size, color, img_width, img_height):
+def create_text_image(text, font_path, font_size, img_width, img_height, color):
     img = Image.new('RGBA', (img_width, img_height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(font_path, font_size)
@@ -154,7 +154,7 @@ def combine_videos(intro_video, outro_video, text, font_path):
 def add_text_to_clip(clip, text, font_path):
     font_size = 70
     color = '#503F95'  # White color
-    text_img = create_text_image(text, font_path, font_size, clip.w, clip.h)
+    text_img = create_text_image(text, font_path, font_size, clip.w, clip.h, color)
     text_clip = ImageClip(text_img).set_duration(clip.duration)
     return CompositeVideoClip([clip, text_clip])
 
