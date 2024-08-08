@@ -126,7 +126,7 @@ def process_full_video(intro_video_path, outro_video_path, display_text, font_pa
     outro_clip = VideoFileClip(outro_video_path)
     
     # 오디오 클립 로드
-    audio_clip = AudioFileClip(audio_file)
+    audio_clip = AudioFileClip(audio_file).set_start(1.0)
     
     # 인트로 클립에 오디오 추가
     intro_with_audio = intro_clip.set_audio(audio_clip)
@@ -206,7 +206,7 @@ def process_with_llm_for_audio(group_name, name, cheer_content):
     completion = client.chat.completions.create(
         model="gpt-4o",
         messages=[
-            {"role": "system", "content": "입력된 단체명(최대 10자), 이름(최대 5자), 응원내용(최대 10자)을 받아 {이름}이/가 {단체명}을 {응원내용}으로 응원한다는 형식으로 응원한다는 메세지를 반환하세요. 이름이 받침으로 끝나면 '이', 그렇지 않으면 '가'를 사용합니다. 응원 내용은 최소 10자 최대 15자로 어떠한 내용을 입력 받더라도 메세지의 관련성은 유지하고 자연스러운 응원메세지를 만들며 욕설과 비속어 없는 밝고 긍정적인 응원 내용으로 끝이 아이같은 말투로 변환하여 출력합니다. '~~한다'같은 말투는 사용하지 않고 '~~해'를 사용합니다 게임대회 응원 메세지라는 점을 고려합니다."},
+            {"role": "system", "content": "입력된 단체명(최대 10자), 이름(최대 5자), 응원내용(최대 10자)을 받아 {이름}이/가 {단체명}을 {응원내용}으로 응원한다는 형식으로 응원한다는 메세지를 반환하세요. 이름이 받침으로 끝나면 '이', 그렇지 않으면 '가'를 사용합니다. 응원 내용은 최소 15자 최대 20자로 어떠한 내용을 입력 받더라도 원본 메세지의 관련성은 유지하되 욕설과 비속어, 부정적 내용은 제거하고 자연스러운 응원메세지를 만들며 밝고 긍정적인 응원 내용을 만듭니다. 아이같은 말투로 출력합니다. '~~한다'같은 말투는 사용하지 않고 '~~해'를 사용합니다 게임대회 응원 메세지라는 점을 고려합니다. 이모티콘 등은 사용하지 않습니다."},
             {"role": "user", "content": f"단체명: {group_name}, 이름: {name}, 응원내용: {cheer_content}"}
         ]
     )
