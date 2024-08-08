@@ -69,8 +69,8 @@ def create_text_image(text, font_path, font_size, color, img_width, img_height):
     w2, h2 = draw.textbbox((0, 0), line2, font=font)[2:]
     
     # Calculate positions
-    y1 = int(img_height * 0.75)  # 80% of the screen height
-    y2 = y1 + h1 + 5  # 10 pixels between lines
+    y1 = int(img_height * 0.73)  # 80% of the screen height
+    y2 = y1 + h1 + 1  # 10 pixels between lines
     x1 = (img_width - w1) // 2 + 100  # 100 pixels to the right
     x2 = (img_width - w2) // 2 + 100
     
@@ -322,8 +322,8 @@ if st.button("메시지 생성"):
             display_text = process_with_llm_for_display(group_name, name)
             audio_text = process_with_llm_for_audio(group_name, name, cheer_content)
         
-            st.write(f"화면에 표시될 메시지: {display_text}")
-            st.write(f"음성으로 생성될 메시지: {audio_text}")
+            st.write(f"화면 메시지: {display_text}")
+            st.write(f"음성 메시지: {audio_text}")
 
             audio_file = generate_audio(audio_text)
 
