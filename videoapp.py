@@ -46,8 +46,15 @@ def download_font(url, font_path):
     download_file(url, font_path)
 
 def create_text_image(text, font_path, font_size, color, img_width, img_height):
+    try:
+        img_width = int(img_width)
+        img_height = int(img_height)
+    except ValueError:
+        raise ValueError(f"Invalid image dimensions: width={img_width}, height={img_height}. Must be integers.")
+    
     if img_width <= 0 or img_height <= 0:
-        raise ValueError(f"Invalid image dimensions: width={img_width}, height={img_height}")
+        raise ValueError(f"Invalid image dimensions: width={img_width}, height={img_height}. Must be positive integers.")
+    
     img = Image.new('RGBA', (img_width, img_height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(font_path, font_size)
@@ -158,8 +165,14 @@ def combine_videos(intro_video, outro_video, text, font_path):
 
 def add_text_to_clip(clip, text, font_path):
     font_size = 70
-    color = '#503F95'  # White color
-    text_img = create_text_image(text, font_path, font_size, clip.w, clip.h, color)
+    color = '#503F95'  # Purple color
+    try:
+        img_width = int(clip.w)
+        img_height = int(clip.h)
+    except (ValueError, AttributeError):
+        raise ValueError(f"Invalid clip dimensions: width={clip.w}, height={clip.h}. Must be integers.")
+    
+    text_img = create_text_image(text, font_path, font_size, color, img_width, img_height)
     text_clip = ImageClip(text_img).set_duration(clip.duration)
     return CompositeVideoClip([clip, text_clip])
 
