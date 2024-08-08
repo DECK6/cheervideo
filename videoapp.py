@@ -69,8 +69,8 @@ def create_text_image(text, font_path, font_size, color, img_width, img_height):
     w2, h2 = draw.textbbox((0, 0), line2, font=font)[2:]
     
     # Calculate positions
-    y1 = int(img_height * 0.8)  # 80% of the screen height
-    y2 = y1 + h1 + 10  # 10 pixels between lines
+    y1 = int(img_height * 0.75)  # 80% of the screen height
+    y2 = y1 + h1 + 5  # 10 pixels between lines
     x1 = (img_width - w1) // 2 + 100  # 100 pixels to the right
     x2 = (img_width - w2) // 2 + 100
     
