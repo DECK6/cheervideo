@@ -19,7 +19,7 @@ TYPECAST_API_KEY = st.secrets["TYPECAST_API_KEY"]
 INTRO_VIDEO_URL = "https://github.com/DECK6/cheervideo/raw/main/intro.mp4"
 OUTRO_VIDEO_URL = "https://github.com/DECK6/cheervideo/raw/main/outro.mp4"
 FONT_URL = "https://github.com/DECK6/cheervideo/raw/main/Giants-Inline.otf"
-HEADER_URL = "https://i.ibb.co/fHFM0Wx/temp-Image-Bl-Kh-HN.jpg"
+HEADER_URL = "https://github.com/DECK6/gamechar/raw/main/header.png"
 EMAIL_SETTINGS = {
     "SMTP_SERVER": "smtp.gmail.com",
     "SMTP_PORT": 587,
