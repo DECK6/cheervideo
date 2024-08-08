@@ -216,6 +216,7 @@ def process_with_llm_for_display(group_name, name):
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
     completion = client.chat.completions.create(
         model="gpt-4o",
+        temperature=0.7,
         messages=[
             {"role": "system", "content": "입력된 단체명(최대 10자)과 이름(최대 5자)을 받아 '{단체명}! {이름}이 응원해!' 또는 '{단체명}! {이름}가 응원해!' 형식으로 반환하세요. 이름이 받침으로 끝나면 '이', 그렇지 않으면 '가'를 사용합니다. 단체명과 이름은 절대로 변경, 가공 할 수 없습니다. 그 외 어떠한 설명도 추가하지 않습니다."},
             {"role": "user", "content": f"단체명: {group_name}, 이름: {name}"}
