@@ -67,7 +67,7 @@ def add_text_to_video(video_path, text, output_path, font_path):
     video = VideoFileClip(video_path)
     font_size = 70
     color = '#503F95'  # White color
-    text_img = create_text_image(text, font_path, font_size, color, video.w, video.h)
+    text_img = create_text_image(text, font_path, font_size, color, clip.w, clip.h)
     text_clip = ImageClip(text_img).set_duration(video.duration)
     video_with_text = CompositeVideoClip([video, text_clip])
     video_with_text.write_videofile(output_path, codec='libx264', audio_codec='aac')
