@@ -298,7 +298,7 @@ def upload_video_to_drive(video_path):
             fields='id'
         ).execute()
 
-        st.success(f"Video uploaded to Google Drive successfully. Share link: {share_link}")
+#        st.success(f"Video uploaded to Google Drive successfully. Share link: {share_link}")
         return file_id, share_link
     except Exception as e:
         st.error(f"An error occurred while uploading to Google Drive: {str(e)}")
