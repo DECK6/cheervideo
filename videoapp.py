@@ -270,13 +270,20 @@ def upload_video_to_drive(video_path):
     # Drive API 클라이언트 생성
     service = build('drive', 'v3', credentials=creds)
 
+    # 'video_upload' 폴더 ID 찾기 또는 생성
+    folder_name = 'video_upload'
+    folder_id = find_or_create_folder(service, folder_name)
+
     # 파일 이름에 타임스탬프 추가
     file_name = os.path.basename(video_path)
     name, extension = os.path.splitext(file_name)
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     new_file_name = f"{name}_{timestamp}{extension}"
 
-    file_metadata = {'name': new_file_name}
+    file_metadata = {
+        'name': new_file_name,
+        'parents': [folder_id]
+    }
     media = MediaFileUpload(video_path, resumable=True)
     
     try:
@@ -297,6 +304,27 @@ def upload_video_to_drive(video_path):
         st.error(f"An error occurred while uploading to Google Drive: {str(e)}")
         return None, None
 
+def find_or_create_folder(service, folder_name):
+    # 폴더 검색
+    results = service.files().list(
+        q=f"mimeType='application/vnd.google-apps.folder' and name='{folder_name}' and trashed=false",
+        spaces='drive',
+        fields='files(id, name)'
+    ).execute()
+    folders = results.get('files', [])
+
+    # 폴더가 존재하면 해당 ID 반환
+    if folders:
+        return folders[0]['id']
+    
+    # 폴더가 없으면 새로 생성
+    folder_metadata = {
+        'name': folder_name,
+        'mimeType': 'application/vnd.google-apps.folder'
+    }
+    folder = service.files().create(body=folder_metadata, fields='id').execute()
+    return folder.get('id')
+    
 # Streamlit app
 st.set_page_config(page_title="응원 메시지 생성기", page_icon="🎥", layout="wide")
 
