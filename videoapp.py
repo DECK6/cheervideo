@@ -341,11 +341,12 @@ st.image(HEADER_URL)
 col1, col2 = st.columns(2)
 
 with col1:
-    st.title("응원 메시지 생성기")
-    group_name = st.text_input("단체명 (최대 10자):", max_chars=10)
-    name = st.text_input("이름 (최대 5자):", max_chars=5)
-    cheer_content = st.text_input("응원 내용 (최대 10자):", max_chars=10)
+    st.title("🎉🎉 Cheer up! 우리 팀을 응원합니다! 🎉🎉\n💪🔥 우리 센터 대표팀을 향한 힘찬 응원 영상 보내기 📹💥")
+    group_name = st.text_input("응원하고 싶은 친구 이름 또는 단체명 (최대 10자):", max_chars=10)
+    name = st.text_input("내 이름 (최대 5자):", max_chars=5)
+    cheer_content = st.text_input("응원 멘트 (최대 10자):", max_chars=10)
     email = st.text_input("이메일 주소:")
+    st.write("CHAT GPT가 응원 멘트를 멋지게 다듬어 볼게요!")
 
     # Font download
     font_path = "Giants-Inline.otf"
@@ -365,7 +366,11 @@ if st.button("메시지 생성"):
             # 전체 비디오 처리 (인트로 + 아웃트로 + 텍스트 + 오디오)
             final_video = process_full_video(INTRO_VIDEO_PATH, OUTRO_VIDEO_PATH, display_text, font_path, audio_file)
 
-            send_email(email, final_video, group_name, name, cheer_content, display_text, audio_text)
+            if email:
+                send_email(email, final_video, group_name, name, cheer_content, display_text, audio_text)
+                st.success("이메일이 전송되었습니다.")
+            else:
+                st.warning("이메일 주소가 입력되지 않아 영상이 이메일로 발송되지 않았습니다.")
 
             with col2:
                 st.video(final_video)
