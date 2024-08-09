@@ -353,7 +353,7 @@ with col1:
     download_font(FONT_URL, font_path)
 
 if st.button("메시지 생성"):
-    if group_name and name and cheer_content and email:
+    if group_name and name and cheer_content:  # 이메일 필수 조건 제거
         with st.spinner("동영상 생성 중..."):
             display_text = process_with_llm_for_display(group_name, name)
             audio_text = process_with_llm_for_audio(group_name, name, cheer_content)
@@ -366,12 +366,12 @@ if st.button("메시지 생성"):
             # 전체 비디오 처리 (인트로 + 아웃트로 + 텍스트 + 오디오)
             final_video = process_full_video(INTRO_VIDEO_PATH, OUTRO_VIDEO_PATH, display_text, font_path, audio_file)
 
-            if email:
+            if email:  # 이메일이 있을 때만 전송
                 send_email(email, final_video, group_name, name, cheer_content, display_text, audio_text)
                 st.success("이메일이 전송되었습니다.")
             else:
                 st.warning("이메일 주소가 입력되지 않아 영상이 이메일로 발송되지 않았습니다.")
-
+            
             with col2:
                 st.video(final_video)
 
@@ -379,5 +379,6 @@ if st.button("메시지 생성"):
             os.unlink(final_video)
     else:
         st.error("모든 필드를 입력해주세요.")
+
 
 
