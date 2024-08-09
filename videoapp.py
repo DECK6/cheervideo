@@ -1,5 +1,6 @@
 import numpy as np
 from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip, AudioFileClip, concatenate_videoclips, CompositeAudioClip, AudioClip
+from moviepy.audio.AudioClip import CompositeAudioClip
 import tempfile
 import streamlit as st
 import os
@@ -12,6 +13,10 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+import datetime
 
 # Constants and settings
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
@@ -80,47 +85,7 @@ def create_text_image(text, font_path, font_size, color, img_width, img_height):
     
     return np.array(img)
 
-#def add_text_to_video(video_path, text, output_path, font_path):
-#    video = VideoFileClip(video_path)
-#    font_size = 70
-#    color = '#503F95'  # Purple color
-#    if video.w <= 0 or video.h <= 0:
-#        raise ValueError(f"Invalid video dimensions: width={video.w}, height={video.h}")
-#    text_img = create_text_image(text, font_path, font_size, color, video.w, video.h)
-#    text_clip = ImageClip(text_img).set_duration(video.duration)
-#    video_with_text = CompositeVideoClip([video, text_clip])
-#    video_with_text.write_videofile(output_path, codec='libx264', audio_codec='aac')
 
-#def add_audio_to_video(video_path, audio_path, output_path):
-#    video = VideoFileClip(video_path)
-#    new_audio = AudioFileClip(audio_path)
-#    
-#    # 비디오 길이 확인
-#    video_duration = video.duration
-#    
-#    # 오디오 길이 확인 및 조정
-#    audio_duration = new_audio.duration
-#    if audio_duration < video_duration - 1:
-#        # 오디오가 너무 짧으면 무음으로 채움
-#        from moviepy.audio.AudioClip import CompositeAudioClip
-#        silence = AudioClip(lambda t: 0, duration=video_duration-1-audio_duration)
-#        new_audio = CompositeAudioClip([new_audio, silence.set_start(audio_duration)])
-#   else:
-#       # 오디오가 너무 길면 자름
-#       new_audio = new_audio.subclip(0, video_duration - 1)
-#    
-#    # 인트로 영상의 1초부터 오디오 시작
-#    new_audio = new_audio.set_start(1.0)
-#    
-#    # 새 오디오를 비디오에 설정 (기존 오디오 대체)
-#    final_video = video.set_audio(new_audio)
-#    
-#    final_video.write_videofile(output_path, codec='libx264', audio_codec='aac')
-#    video.close()
-#    new_audio.close()
-#    final_video.close()
-
-from moviepy.audio.AudioClip import CompositeAudioClip
 
 def process_full_video(intro_video_path, outro_video_path, display_text, font_path, audio_file):
     # 비디오 클립 로드
@@ -179,38 +144,6 @@ def process_full_video(intro_video_path, outro_video_path, display_text, font_pa
     return temp_final_video_path
 
 
-#def combine_videos(intro_video, outro_video, text, font_path):
-#    intro_clip = VideoFileClip(intro_video)
-#    outro_clip = VideoFileClip(outro_video)
-#    
-#    intro_with_text = add_text_to_clip(intro_clip, text, font_path)
-#    outro_with_text = add_text_to_clip(outro_clip, text, font_path)
-#    
-#    final_clip = concatenate_videoclips([intro_with_text, outro_with_text])
-#    
-#    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_final_video:
-#        temp_final_video_path = temp_final_video.name
-#    
-#    final_clip.write_videofile(temp_final_video_path, codec='libx264', audio_codec='aac')
-#    
-#    intro_clip.close()
-#    outro_clip.close()
-#    final_clip.close()
-#    
-#    return temp_final_video_path
-
-#def add_text_to_clip(clip, text, font_path):
-#    font_size = 100  # 100픽셀 폰트 크기
-#    color = '#503F95'  # 보라색
-#    try:
-#        img_width = int(clip.w)
-#        img_height = int(clip.h)
-#    except (ValueError, AttributeError):
-#        raise ValueError(f"Invalid clip dimensions: width={clip.w}, height={clip.h}. Must be integers.")
-   
-#    text_img = create_text_image(text, font_path, font_size, color, img_width, img_height)
-#    text_clip = ImageClip(text_img).set_duration(clip.duration)
-#    return CompositeVideoClip([clip, text_clip])
 
 def process_with_llm_for_display(group_name, name):
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -330,6 +263,39 @@ def send_email(receiver_email, video_path, group_name, name, cheer_content, disp
     except Exception as e:
         st.error(f"Failed to send email: {str(e)}")
 
+def upload_video_to_drive(video_path):
+    # 인증 정보 로드
+    creds = Credentials.from_authorized_user_file('token.json', ['https://www.googleapis.com/auth/drive'])
+
+    # Drive API 클라이언트 생성
+    service = build('drive', 'v3', credentials=creds)
+
+    # 파일 이름에 타임스탬프 추가
+    file_name = os.path.basename(video_path)
+    name, extension = os.path.splitext(file_name)
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    new_file_name = f"{name}_{timestamp}{extension}"
+
+    file_metadata = {'name': new_file_name}
+    media = MediaFileUpload(video_path, resumable=True)
+    
+    try:
+        file = service.files().create(body=file_metadata, media_body=media, fields='id,webViewLink').execute()
+        file_id = file.get('id')
+        share_link = file.get('webViewLink')
+
+        # 파일을 공개로 설정 (선택사항)
+        service.permissions().create(
+            fileId=file_id,
+            body={'type': 'anyone', 'role': 'reader'},
+            fields='id'
+        ).execute()
+
+        st.success(f"Video uploaded to Google Drive successfully. Share link: {share_link}")
+        return file_id, share_link
+    except Exception as e:
+        st.error(f"An error occurred while uploading to Google Drive: {str(e)}")
+        return None, None
 
 # Streamlit app
 st.set_page_config(page_title="응원 메시지 생성기", page_icon="🎥", layout="wide")
@@ -365,6 +331,12 @@ if st.button("메시지 생성"):
 
             # 전체 비디오 처리 (인트로 + 아웃트로 + 텍스트 + 오디오)
             final_video = process_full_video(INTRO_VIDEO_PATH, OUTRO_VIDEO_PATH, display_text, font_path, audio_file)
+
+            # Google Drive에 업로드
+            file_id, share_link = upload_video_to_drive(final_video)
+
+            if file_id:
+                st.write(f"Video uploaded to Google Drive. Share link: {share_link}")
 
             if email:  # 이메일이 있을 때만 전송
                 send_email(email, final_video, group_name, name, cheer_content, display_text, audio_text)
