@@ -363,8 +363,8 @@ if st.button("메시지 생성"):
             # Google Drive에 업로드
             file_id, share_link = upload_video_to_drive(final_video)
 
-            if file_id:
-                st.write(f"Video uploaded to Google Drive. Share link: {share_link}")
+ #           if file_id:
+ #               st.write(f"Video uploaded to Google Drive. Share link: {share_link}")
 
             if email:  # 이메일이 있을 때만 전송
                 send_email(email, final_video, group_name, name, cheer_content, display_text, audio_text)
